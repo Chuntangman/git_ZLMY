@@ -1,0 +1,87 @@
+/* 全局样式 */
+:root {
+  --primary-color: #4a90e2;
+  --primary-color-light: rgba(74, 144, 226, 0.1);
+  --primary-color-dark: #357abd;
+  --text-color: #333;
+  --text-color-light: #666;
+  --background-color: rgba(255, 255, 255, 0.95);
+  --border-color: rgba(74, 144, 226, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+/* 确保所有组件都能正确显示 */
+.sidebar,
+.slideout-window,
+.right-drawer,
+.feature-click-info {
+  position: fixed;
+  z-index: 1000;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 确保动画效果正常工作 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 确保滚动条样式一致 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-color-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color-dark);
+}
+
+/* 确保按钮和输入框样式一致 */
+button, input {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* 确保文本阴影效果 */
+h1, h2, h3, h4, h5, h6 {
+  text-shadow: 0 1px 2px var(--shadow-color);
+} 
