@@ -28,6 +28,7 @@
       :type="helpModalType"
       @close="closeHelpModal"
     />
+    <RightDrawer_lutou />
   </div>
 </template>
 
@@ -41,6 +42,7 @@ import SlideOutWindow from './components/SlideOutWindow.vue';
 import FeatureClickInfo from './components/FeatureClickInfo.vue';
 import HelpButton from './components/HelpButton.vue';
 import InfoMoveLoader from './components/InfoMoveLoader.vue';
+import RightDrawer_lutou from './components/RightDrawer_lutou.vue';
 
 export default {
   name: 'App',
@@ -52,7 +54,8 @@ export default {
     SlideOutWindow,
     FeatureClickInfo,
     HelpButton,
-    InfoMoveLoader
+    InfoMoveLoader,
+    RightDrawer_lutou
   },
   data() {
     return {

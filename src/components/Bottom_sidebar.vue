@@ -94,8 +94,14 @@ export default {
     handleThumbnailClick(item) {
       // 处理模型路径：将 public/mock-models/xxx/tileset.json 转换为 /mock-models/xxx/tileset.json
       const modelPath = item.URL.replace(/^public\\/, '').replace(/\\/g, '/');
-      // 通过事件总线通知InfoMoveLoader加载模型
+      
+      // 1. 通知InfoMoveLoader加载模型
       emitter.emit('model-path-changed', '/' + modelPath);
+      
+      // 2. 触发露头信息显示（这不会影响其他组件，因为只有RightDrawer_lutou在监听这个事件）
+      emitter.emit('thumbnail-clicked', item.ID);
+      
+      // 3. 如果有其他需要处理的点击事件，可以继续添加
     },
     toggleExpand() {
       this.isExpanded = !this.isExpanded;

@@ -113,3 +113,17 @@ export const get3DModelById = async (modelId) => {
         throw error;
     }
 };
+
+export async function get3DModelDetails(modelId) {
+  try {
+    const response = await fetch(`http://localhost:5000/api/3d-models/${modelId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching 3D model details:', error);
+    throw error;
+  }
+}

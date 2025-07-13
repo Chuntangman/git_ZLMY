@@ -82,6 +82,8 @@ export default {
                     this.$emit('feature-clicked', pickedObject);
                 } else {
                     this.$emit('click-blank');
+                    // 发送关闭露头抽屉的事件
+                    emitter.emit('close-lutou-drawer');
                 }
             },
             Cesium.ScreenSpaceEventType.LEFT_CLICK
@@ -92,6 +94,8 @@ export default {
             const pickedObject = this.viewer.scene.pick(click.position);
             if (!pickedObject) {
                 this.$emit('click-blank');
+                // 这里也添加关闭事件
+                emitter.emit('close-lutou-drawer');
             }
         }
     },
