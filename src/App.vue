@@ -30,6 +30,11 @@
     />
     <RightDrawer_lutou />
     <AI />
+    <EnvironmentalSetup 
+      v-if="viewer"
+      :isOpen="environmentalSetupOpen"
+      :viewer="viewer"
+    />
   </div>
 </template>
 
@@ -45,6 +50,7 @@ import HelpButton from './components/HelpButton.vue';
 import InfoMoveLoader from './components/InfoMoveLoader.vue';
 import RightDrawer_lutou from './components/RightDrawer_lutou.vue';
 import AI from './components/AI.vue';
+import EnvironmentalSetup from './components/Environmental_setup.vue';
 
 export default {
   name: 'App',
@@ -58,7 +64,8 @@ export default {
     HelpButton,
     InfoMoveLoader,
     RightDrawer_lutou,
-    AI
+    AI,
+    EnvironmentalSetup
   },
   data() {
     return {
@@ -69,7 +76,8 @@ export default {
       rockSearchOpen: false,
       sidebarCollapsed: true,
       helpModalOpen: false,
-      helpModalType: 'settings'
+      helpModalType: 'settings',
+      environmentalSetupOpen: false
     };
   },
   methods: {
@@ -122,6 +130,12 @@ export default {
       this.helpModalType = 'help';
       this.helpModalOpen = true;
     });
+    emitter.on('toggle-environmental-setup', () => {
+      this.environmentalSetupOpen = !this.environmentalSetupOpen;
+    });
+    emitter.on('close-environmental-setup', () => {
+      this.environmentalSetupOpen = false;
+    });
     emitter.on('feature-hover-error', (error) => {
     console.warn('悬浮信息显示错误:', error);
     // 可以在这里添加用户友好的错误提示
@@ -132,6 +146,8 @@ export default {
     emitter.off('toggle-rock-search', this.toggleRockSearch);
     emitter.off('show-settings');
     emitter.off('show-help');
+    emitter.off('toggle-environmental-setup');
+    emitter.off('close-environmental-setup');
 }
 };
 

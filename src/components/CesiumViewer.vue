@@ -34,7 +34,11 @@ export default {
         return {
             viewer: null,
             showGeologicalCorridor: false,
-            coordinates: null
+            coordinates: null,
+            drawingHandler: null,
+            currentDrawingMode: null,
+            currentPoints: null, // 用于存储绘制中的点
+            currentEntity: null // 用于存储绘制中的实体
         }
     },
     mounted() {
@@ -65,6 +69,19 @@ export default {
             },
             Cesium.ScreenSpaceEventType.MOUSE_MOVE
         );
+
+        // 监听环境设置相关事件
+        emitter.on('start-drawing', ({ tool, style }) => {
+            this.startDrawing(tool, style);
+        });
+
+        emitter.on('stop-drawing', () => {
+            this.stopDrawing();
+        });
+
+        emitter.on('clear-annotations', () => {
+            this.clearAnnotations();
+        });
 
         // 正确的事件监听
         emitter.on('load-geological-corridor', (show = true) => {
@@ -97,12 +114,150 @@ export default {
                 // 这里也添加关闭事件
                 emitter.emit('close-lutou-drawer');
             }
+        },
+        
+        // 开始绘制
+        startDrawing(tool, style) {
+            this.cleanupDrawingEvents();
+            this.currentDrawingMode = tool;
+            
+            const Cesium = this.$Cesium;
+            this.drawingHandler = new Cesium.ScreenSpaceEventHandler(this.viewer.scene.canvas);
+            
+            // 处理点击事件
+            this.drawingHandler.setInputAction((click) => {
+                const cartesian = this.viewer.camera.pickEllipsoid(
+                    click.position,
+                    this.viewer.scene.globe.ellipsoid
+                );
+                
+                if (!cartesian) return;
+                
+                switch (tool) {
+                    case 'billboard':
+                        this.viewer.entities.add({
+                            position: cartesian,
+                            billboard: {
+                                image: `/images/${style.image}.png`,
+                                scale: style.scale,
+                                color: Cesium.Color.fromCssColorString(style.color)
+                            }
+                        });
+                        break;
+                        
+                    case 'label':
+                        this.viewer.entities.add({
+                            position: cartesian,
+                            label: {
+                                text: style.text || '标签',
+                                font: `${style.fontSize}px sans-serif`,
+                                fillColor: Cesium.Color.fromCssColorString(style.color),
+                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                outlineWidth: 2,
+                                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+                            }
+                        });
+                        break;
+                        
+                    case 'polyline':
+                        if (!this.currentPoints) this.currentPoints = [];
+                        this.currentPoints.push(cartesian);
+                        
+                        if (this.currentPoints.length > 1) {
+                            if (this.currentEntity) {
+                                this.viewer.entities.remove(this.currentEntity);
+                            }
+                            this.currentEntity = this.viewer.entities.add({
+                                polyline: {
+                                    positions: this.currentPoints,
+                                    width: style.width,
+                                    material: new Cesium.PolylineDashMaterialProperty({
+                                        color: Cesium.Color.fromCssColorString(style.color),
+                                        dashLength: style.style === 'dashed' ? 16.0 : 0.0
+                                    })
+                                }
+                            });
+                        }
+                        break;
+                        
+                    case 'polygon':
+                        if (!this.currentPoints) this.currentPoints = [];
+                        this.currentPoints.push(cartesian);
+                        
+                        if (this.currentPoints.length > 2) {
+                            if (this.currentEntity) {
+                                this.viewer.entities.remove(this.currentEntity);
+                            }
+                            this.currentEntity = this.viewer.entities.add({
+                                polygon: {
+                                    hierarchy: new Cesium.PolygonHierarchy(this.currentPoints),
+                                    material: Cesium.Color.fromCssColorString(style.color).withAlpha(style.alpha),
+                                    outline: true,
+                                    outlineColor: Cesium.Color.WHITE,
+                                    outlineWidth: style.outlineWidth
+                                }
+                            });
+                        }
+                        break;
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            
+            // 添加鼠标移动事件用于实时预览
+            if (tool === 'polyline' || tool === 'polygon') {
+                this.drawingHandler.setInputAction((movement) => {
+                    if (!this.currentPoints || this.currentPoints.length === 0) return;
+                    
+                    const cartesian = this.viewer.camera.pickEllipsoid(
+                        movement.endPosition,
+                        this.viewer.scene.globe.ellipsoid
+                    );
+                    
+                    if (!cartesian) return;
+                    
+                    if (this.currentEntity) {
+                        const positions = [...this.currentPoints, cartesian];
+                        if (tool === 'polyline') {
+                            this.currentEntity.polyline.positions = positions;
+                        } else {
+                            this.currentEntity.polygon.hierarchy = new Cesium.PolygonHierarchy(positions);
+                        }
+                    }
+                }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            }
+        },
+
+        // 停止绘制
+        stopDrawing() {
+            this.cleanupDrawingEvents();
+            this.currentPoints = null;
+            this.currentEntity = null;
+            this.currentDrawingMode = null;
+        },
+
+        // 清除所有标注
+        clearAnnotations() {
+            this.viewer.entities.removeAll();
+            this.currentPoints = null;
+            this.currentEntity = null;
+        },
+
+        // 清理绘制事件
+        cleanupDrawingEvents() {
+            if (this.drawingHandler) {
+                this.drawingHandler.destroy();
+                this.drawingHandler = null;
+            }
         }
     },
     beforeUnmount() {
+        this.cleanupDrawingEvents();
         if (this.viewer && !this.viewer.isDestroyed) {
             this.viewer.destroy();
         }
+        // 移除事件监听
+        emitter.off('start-drawing');
+        emitter.off('stop-drawing');
+        emitter.off('clear-annotations');
         emitter.off('load-geological-corridor');
     }
 }

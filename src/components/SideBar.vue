@@ -21,6 +21,10 @@
         <img src="../image/研究露头.png" class="icon">
         <span v-if="!collapsed" class="button-text">露头查找</span>
       </button>
+      <button @click="toggleEnvironmentalSetup" class="menu-button">
+        <img src="../image/环境设置.png" class="icon">
+        <span v-if="!collapsed" class="button-text">环境设置</span>
+      </button>
     </div>
     <div class="bottom-menu">
       <button @click="showSettings" class="bottom-button" title="设置">
@@ -62,6 +66,9 @@ export default {
     },
     showHelp() {
       emitter.emit('show-help');
+    },
+    toggleEnvironmentalSetup() {
+      emitter.emit('toggle-environmental-setup');
     },
     toggleModule(moduleName) {
       // 其他模块逻辑
