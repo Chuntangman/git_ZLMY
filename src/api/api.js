@@ -127,3 +127,92 @@ export async function get3DModelDetails(modelId) {
     throw error;
   }
 }
+
+// AI Chat API 配置
+const AI_API_BASE_URL = '/api/dify';  // 使用代理URL
+const AI_API_KEY = 'app-0N3NXK5QifxHob782Pm3nadw';
+
+// 创建专用的axios实例
+const aiAxios = axios.create({
+  baseURL: AI_API_BASE_URL,
+  timeout: 30000, // 增加超时时间到30秒
+  headers: {
+    'Authorization': `Bearer ${AI_API_KEY}`,
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  }
+});
+
+// AI聊天相关API
+export const aiApi = {
+  // 测试连接
+  testConnection: async () => {
+    try {
+      const response = await aiAxios.post('/chat-messages', {
+        inputs: {},
+        query: "Hello, this is a test message",
+        response_mode: "blocking",
+        user: "test-user-" + Date.now(),
+      });
+      console.log('API连接测试成功:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('API连接测试失败:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data || error.message
+      };
+    }
+  },
+
+  // 发送聊天消息
+  sendChatMessage: async (message, conversationId = '') => {
+    try {
+      console.log('Sending message:', {
+        message,
+        conversationId,
+        url: `${AI_API_BASE_URL}/chat-messages`
+      });
+
+      const response = await aiAxios.post('/chat-messages', {
+        inputs: {},
+        query: message,
+        response_mode: "blocking", // 暂时使用阻塞模式进行测试
+        conversation_id: conversationId,
+        user: "user-" + Date.now(),
+      });
+
+      console.log('Response received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  },
+
+  // 上传文件（如果需要的话）
+  uploadFile: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(`${AI_API_BASE_URL}/files/upload`, formData, {
+        headers: {
+          'Authorization': `Bearer ${AI_API_KEY}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
+    }
+  }
+};

@@ -29,6 +29,7 @@
       @close="closeHelpModal"
     />
     <RightDrawer_lutou />
+    <AI />
   </div>
 </template>
 
@@ -43,6 +44,7 @@ import FeatureClickInfo from './components/FeatureClickInfo.vue';
 import HelpButton from './components/HelpButton.vue';
 import InfoMoveLoader from './components/InfoMoveLoader.vue';
 import RightDrawer_lutou from './components/RightDrawer_lutou.vue';
+import AI from './components/AI.vue';
 
 export default {
   name: 'App',
@@ -55,7 +57,8 @@ export default {
     FeatureClickInfo,
     HelpButton,
     InfoMoveLoader,
-    RightDrawer_lutou
+    RightDrawer_lutou,
+    AI
   },
   data() {
     return {
@@ -152,6 +155,12 @@ html, body {
   right: 0;
   bottom: 0;
   overflow: hidden;
+}
+
+/* 确保AI组件可见 */
+.ai-component {
+  position: relative;
+  z-index: 9999;
 }
 
 /* 移除调试样式 */

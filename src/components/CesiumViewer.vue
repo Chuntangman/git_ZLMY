@@ -113,18 +113,19 @@ export default {
     width: 100%;
     height: 100%;
     position: relative;
+    z-index: 1; /* 添加较低的z-index */
 }
 
 .coordinates-display {
     position: absolute;
     bottom: 20px;
-    right: 20px; /* 改为右下角 */
-    background-color: rgba(255, 255, 255, 0.5); /* 改为白色背景，50%透明度 */
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.5);
     padding: 10px 15px;
     border-radius: 8px;
     font-family: Arial, sans-serif;
     font-size: 14px;
-    z-index: 999;
+    z-index: 2; /* 确保坐标显示在地图上方但在AI下方 */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;

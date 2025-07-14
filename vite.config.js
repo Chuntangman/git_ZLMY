@@ -32,5 +32,14 @@ export default defineConfig({
         }
       }
     }
+  },
+  server: {
+    proxy: {
+      '/api/dify': {
+        target: 'https://api.dify.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/dify/, '/v1')
+      }
+    }
   }
 }) 

@@ -17,14 +17,22 @@ import './assets/styles/global.css' // 添加全局样式
 window.CESIUM_BASE_URL = '/cesium/' // 必须与 public/cesium 目录对应
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_TOKEN
 
+// 创建事件总线实例
+const emitter = mitt()
+
 const app = createApp(App)
 // 全局注册Cesium
 app.config.globalProperties.$Cesium = Cesium
 // 全局注册axios
 app.config.globalProperties.$axios = axios
+// 全局注册事件总线
+app.config.globalProperties.$emitter = emitter
 
 // 挂载应用
 app.mount('#app')
+
+// 导出事件总线实例供其他组件使用
+export { emitter }
 
 function handleModelPathChanged(newPath) {
   if (newPath && newPath !== this.modelPath) {
