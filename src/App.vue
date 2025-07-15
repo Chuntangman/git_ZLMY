@@ -27,6 +27,7 @@
       :isOpen="helpModalOpen"
       :type="helpModalType"
       @close="closeHelpModal"
+      @update-effect="handleEffectUpdate"
     />
     <RightDrawer_lutou />
     <AI />
@@ -117,6 +118,10 @@ export default {
   },
     closeHelpModal() {
       this.helpModalOpen = false;
+    },
+    handleEffectUpdate(effectType, enabled) {
+        // 通过事件总线发送特效更新事件
+        emitter.emit('update-effect', effectType, enabled);
     }
   },
   mounted() {

@@ -18,9 +18,94 @@
           </div>
           <div class="setting-item">
             <label>动画效果</label>
-            <div class="toggle-switch">
+            <div class="toggle-switch" title="开启后可以看到地图上的动画过渡效果">
               <input type="checkbox" v-model="enableAnimations" id="animations">
               <label for="animations"></label>
+            </div>
+          </div>
+          <!-- 添加新的特效控制选项 -->
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后可以看到太阳光照对地球表面的影响，在白天和黑夜交替时最明显。
+建议：调整时间到日出或日落时分观察效果最佳。">
+              <label>太阳光照效果</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableSunLighting" id="sunLighting">
+              <label for="sunLighting"></label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后可以看到地球大气层的蓝色渐变效果。
+建议：远距离观察地球时效果最明显，可以通过鼠标滚轮缩放查看。">
+              <label>大气效果</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableAtmosphere" id="atmosphere">
+              <label for="atmosphere"></label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后可以看到地形的阴影效果，使地形更加立体。
+建议：在山地区域放大观察效果最明显。">
+              <label>地形阴影</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableTerrainShadows" id="terrainShadows">
+              <label for="terrainShadows"></label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后会在地球表面显示流星特效。
+建议：在夜晚场景下观察效果最佳。">
+              <label>粒子效果</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableParticleEffects" id="particleEffects">
+              <label for="particleEffects"></label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后会显示飞行路径动画。
+建议：开启后可以看到飞行轨迹，并且相机会自动跟随。">
+              <label>飞行动画</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableFlightAnimations" id="flightAnimations">
+              <label for="flightAnimations"></label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后可以看到逼真的水面波动和反射效果。
+建议：在海洋、湖泊等水域区域观察效果最佳，水面会随时间缓慢波动。">
+              <label>水体特效</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableWaterEffect" id="waterEffect">
+              <label for="waterEffect"></label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="label-with-tooltip" 
+                 title="开启后将使用更高质量的地球纹理和渲染效果。
+建议：开启后地形和建筑物的细节会更加清晰，但可能会影响性能。">
+              <label>高质量纹理</label>
+              <span class="info-icon">?</span>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" v-model="enableHighQualityTextures" id="highQualityTextures">
+              <label for="highQualityTextures"></label>
             </div>
           </div>
         </div>
@@ -60,12 +145,42 @@ export default {
   data() {
     return {
       selectedMapStyle: 'default',
-      enableAnimations: true
+      enableAnimations: false,
+      enableSunLighting: false,
+      enableAtmosphere: false,
+      enableTerrainShadows: false,
+      enableParticleEffects: false,
+      enableFlightAnimations: false,
+      enableWaterEffect: false,
+      enableHighQualityTextures: false
     }
   },
   computed: {
     title() {
       return this.type === 'settings' ? '设置' : '帮助';
+    }
+  },
+  watch: {
+    enableSunLighting(newVal) {
+      this.$emit('update-effect', 'sunLighting', newVal);
+    },
+    enableAtmosphere(newVal) {
+      this.$emit('update-effect', 'atmosphere', newVal);
+    },
+    enableTerrainShadows(newVal) {
+      this.$emit('update-effect', 'terrainShadows', newVal);
+    },
+    enableParticleEffects(newVal) {
+      this.$emit('update-effect', 'particleEffects', newVal);
+    },
+    enableFlightAnimations(newVal) {
+      this.$emit('update-effect', 'flightAnimations', newVal);
+    },
+    enableWaterEffect(newVal) {
+      this.$emit('update-effect', 'waterEffect', newVal);
+    },
+    enableHighQualityTextures(newVal) {
+      this.$emit('update-effect', 'highQualityTextures', newVal);
     }
   },
   methods: {
@@ -239,5 +354,74 @@ export default {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.label-with-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: help;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #666;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: help;
+}
+
+.label-with-tooltip:hover {
+  color: #4a90e2;
+}
+
+.info-icon:hover {
+  background-color: #4a90e2;
+  color: white;
+}
+
+/* 添加工具提示样式 */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: -10px;
+  top: 100%;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  width: max-content;
+  max-width: 300px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  margin-top: 8px;
+}
+
+[title]:hover::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 100%;
+  border: 6px solid transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.8);
+  transform: translateY(-2px);
+  pointer-events: none;
+}
+
+.setting-item {
+  position: relative;
 }
 </style> 
