@@ -116,11 +116,28 @@ export const get3DModelById = async (modelId) => {
 
 export async function get3DModelDetails(modelId) {
   try {
+    console.log('Fetching 3D model details for ID:', modelId);
     const response = await fetch(`http://localhost:5000/api/3d-models/${modelId}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
+    console.log('Received raw data:', data);
+    
+    // 处理媒体文件数据
+    if (data.media_files) {
+      data.media_files = data.media_files.map(media => {
+        const type = media.type?.toLowerCase() || '';
+        return {
+          ...media,
+          type,
+          isImage: ['png', 'jpg', 'jpeg'].includes(type),
+          isVideo: type === 'mp4'
+        };
+      });
+      console.log('Processed media files:', data.media_files);
+    }
+    
     return data;
   } catch (error) {
     console.error('Error fetching 3D model details:', error);

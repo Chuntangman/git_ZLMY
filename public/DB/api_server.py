@@ -47,7 +47,8 @@ async def get_3d_models():
 async def get_3d_model(model_id: int):
     try:
         logger.debug(f"Fetching 3D model with ID: {model_id}")
-        query = """
+        # 获取三维模型数据
+        model_query = """
         SELECT 
             ID,
             地理地名,
@@ -60,14 +61,81 @@ async def get_3d_model(model_id: int):
         FROM 三维模型
         WHERE ID = ?
         """
-        results = execute_query(query, (model_id,))
-        logger.debug(f"Query results: {results}")
+        model_results = execute_query(model_query, (model_id,))
+        logger.debug(f"3D model query results: {model_results}")
         
-        if not results:
+        if not model_results:
             logger.warning(f"No 3D model found for ID: {model_id}")
             raise HTTPException(status_code=404, detail=f"3D model not found: {model_id}")
+        
+        model_data = model_results[0]
+        geographic_name = model_data['地理地名']
+        logger.debug(f"Found 3D model with 地理地名: {geographic_name}")
+        
+        # 获取相关的多媒体文件
+        media_query = """
+        SELECT 
+            ID,
+            关联类型,
+            关联id,
+            媒体类型,
+            文件名,
+            文件,
+            url
+        FROM 多媒体文件
+        WHERE 关联id = ?
+        """
+        logger.debug(f"Executing media query with 地理地名: {geographic_name}")
+        media_results = execute_query(media_query, (geographic_name,))
+        logger.debug(f"Media query found {len(media_results)} results")
+        
+        # 处理多媒体文件数据
+        media_files = []
+        for media in media_results:
+            logger.debug(f"Processing media record: ID={media['ID']}, 关联id={media.get('关联id')}, 媒体类型={media.get('媒体类型')}")
             
-        return results[0]
+            media_info = {
+                'id': media['ID'],
+                'type': media.get('媒体类型', '').lower(),  # 转换为小写以便于比较
+                'fileName': media.get('文件名'),
+                'url': media.get('url')
+            }
+            
+            # 如果是视频类型且有url，确保url路径正确
+            if media_info['type'] == 'mp4':
+                if media_info['url']:
+                    # 移除可能的项目路径前缀
+                    media_info['url'] = media_info['url'].replace('my-cesium-app/', '')
+                    if not media_info['url'].startswith('/'):
+                        media_info['url'] = '/' + media_info['url']
+                    logger.debug(f"Processed video URL: {media_info['url']}")
+                elif media.get('文件'):
+                    logger.debug("Found video BLOB data")
+                    # 这里可以处理二进制视频数据如果需要
+            
+            # 如果是图片类型，转换二进制数据为base64
+            elif media_info['type'] in ['png', 'jpg', 'jpeg'] and media.get('文件'):
+                binary_data = media['文件']
+                if isinstance(binary_data, memoryview):
+                    binary_data = binary_data.tobytes()
+                base64_data = base64.b64encode(binary_data).decode('utf-8')
+                media_info['data'] = f"data:image/{media_info['type']};base64,{base64_data}"
+                logger.debug(f"Processed image data for ID: {media_info['id']}")
+            
+            media_files.append(media_info)
+        
+        logger.debug(f"Final processed media files: {[{
+            'id': m['id'],
+            'type': m['type'],
+            'url': m.get('url'),
+            'hasData': 'data' in m
+        } for m in media_files]}")
+        
+        # 将多媒体数据添加到返回结果中
+        model_data['media_files'] = media_files
+        model_data['has_media'] = len(media_files) > 0
+        return model_data
+            
     except HTTPException as he:
         raise he
     except Exception as e:
