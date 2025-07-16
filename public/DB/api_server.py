@@ -411,5 +411,162 @@ async def get_xrf_test_results(sample_id: str):
         logger.error(f"Unexpected error in get_xrf_test_results: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unexpected server error: {str(e)}")
 
+@app.get("/api/rock-samples/filters")
+async def get_rock_sample_filters():
+    try:
+        logger.debug("Fetching filter options for rock samples")
+        
+        # 获取所有可能的选项
+        filters = {}
+        
+        try:
+            # 获取岩石类别选项
+            query = "SELECT DISTINCT [岩石类别] FROM [岩石标本] WHERE [岩石类别] IS NOT NULL"
+            results = execute_query(query)
+            logger.debug(f"岩石类别 query results: {results}")
+            filters['岩石类别'] = [r['岩石类别'] for r in results]
+            
+            # 获取颜色选项
+            query = "SELECT DISTINCT [颜色] FROM [岩石标本] WHERE [颜色] IS NOT NULL"
+            results = execute_query(query)
+            logger.debug(f"颜色 query results: {results}")
+            filters['颜色'] = [r['颜色'] for r in results]
+            
+            # 获取粒度选项
+            query = "SELECT DISTINCT [粒度（主要）] FROM [岩石标本] WHERE [粒度（主要）] IS NOT NULL"
+            results = execute_query(query)
+            logger.debug(f"粒度 query results: {results}")
+            filters['粒度'] = [r['粒度（主要）'] for r in results]
+            
+            # 获取特殊结构选项
+            query = "SELECT DISTINCT [特殊结构] FROM [岩石标本] WHERE [特殊结构] IS NOT NULL"
+            results = execute_query(query)
+            logger.debug(f"特殊结构 query results: {results}")
+            filters['特殊结构'] = [r['特殊结构'] for r in results]
+            
+            # 获取特殊矿物选项
+            query = "SELECT DISTINCT [特殊矿物] FROM [岩石标本] WHERE [特殊矿物] IS NOT NULL"
+            results = execute_query(query)
+            logger.debug(f"特殊矿物 query results: {results}")
+            filters['特殊矿物'] = [r['特殊矿物'] for r in results]
+            
+            logger.debug(f"Successfully fetched all filter options: {filters}")
+            return filters
+            
+        except Exception as query_error:
+            logger.error(f"Database query error: {str(query_error)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Database query error: {str(query_error)}"
+            )
+            
+    except Exception as e:
+        logger.error(f"Error in get_rock_sample_filters: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch filter options: {str(e)}"
+        )
+
+@app.get("/api/rock-samples")
+async def get_rock_samples(
+    基本名称: str = None,
+    岩石类别: str = None,
+    颜色: str = None,
+    主要成分: str = None,
+    粒度: str = None,
+    特殊结构: str = None,
+    特殊矿物: str = None,
+    系: str = None,
+    组段: str = None
+):
+    try:
+        logger.debug("Fetching rock samples with filters")
+        
+        # 构建基础查询
+        query = """
+        SELECT 
+            [ID],
+            [系（与组并非等时对应）] as '系',
+            [组段],
+            [基本名称],
+            [颜色],
+            [主要成分],
+            [粒度（主要）] as '粒度',
+            [特殊结构],
+            [特殊矿物],
+            [岩石类别]
+        FROM [岩石标本]
+        WHERE 1=1
+        """
+        
+        # 构建参数列表
+        params = []
+        
+        # 动态添加过滤条件
+        if 基本名称:
+            query += " AND [基本名称] LIKE ?"
+            params.append(f"%{基本名称}%")
+        if 岩石类别:
+            query += " AND [岩石类别] = ?"
+            params.append(岩石类别)
+        if 颜色:
+            query += " AND [颜色] = ?"
+            params.append(颜色)
+        if 主要成分:
+            query += " AND [主要成分] LIKE ?"
+            params.append(f"%{主要成分}%")
+        if 粒度:
+            query += " AND [粒度（主要）] = ?"
+            params.append(粒度)
+        if 特殊结构:
+            query += " AND [特殊结构] LIKE ?"
+            params.append(f"%{特殊结构}%")
+        if 特殊矿物:
+            query += " AND [特殊矿物] LIKE ?"
+            params.append(f"%{特殊矿物}%")
+        if 系:
+            query += " AND [系（与组并非等时对应）] = ?"
+            params.append(系)
+        if 组段:
+            query += " AND [组段] = ?"
+            params.append(组段)
+            
+        logger.debug(f"Executing query: {query}")
+        logger.debug(f"With parameters: {params}")
+            
+        # 执行查询
+        results = execute_query(query, tuple(params))
+        logger.debug(f"Found {len(results)} rock samples")
+        
+        # 获取每个岩石样品的图片
+        for result in results:
+            try:
+                # 查询关联的图片
+                media_query = """
+                SELECT TOP 1 [文件]
+                FROM [多媒体文件]
+                WHERE [关联id] = ? AND [关联类型] = '岩石标本'
+                """
+                media_results = execute_query(media_query, (result['ID'],))
+                
+                if media_results and media_results[0].get('文件'):
+                    binary_data = media_results[0]['文件']
+                    if isinstance(binary_data, memoryview):
+                        binary_data = binary_data.tobytes()
+                    base64_data = base64.b64encode(binary_data).decode('utf-8')
+                    # 根据实际图片类型设置MIME类型
+                    result['imageUrl'] = f"data:image/jpeg;base64,{base64_data}"
+                else:
+                    result['imageUrl'] = None
+                    logger.debug(f"No image found for rock ID: {result['ID']}")
+            except Exception as e:
+                logger.error(f"Error processing media for rock {result['ID']}: {str(e)}")
+                result['imageUrl'] = None
+        
+        return results
+    except Exception as e:
+        logger.error(f"Error in get_rock_samples: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000) 

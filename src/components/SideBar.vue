@@ -28,11 +28,11 @@
     </div>
     <div class="bottom-menu">
       <button @click="showSettings" class="bottom-button" title="设置">
-        <i class="bottom-icon">⚙️</i>
+        <img src="../image/工具.png" class="bottom-icon" />
         <span v-if="!collapsed" class="bottom-text">设置</span>
       </button>
       <button @click="showHelp" class="bottom-button" title="帮助">
-        <i class="bottom-icon">❓</i>
+        <img src="../image/帮助.png" class="bottom-icon" />
         <span v-if="!collapsed" class="bottom-text">帮助</span>
       </button>
     </div>
@@ -280,7 +280,8 @@ export default {
 }
 
 .bottom-icon {
-  font-size: 20px;
+  width: 40px;
+  height: 40px;
   margin-right: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

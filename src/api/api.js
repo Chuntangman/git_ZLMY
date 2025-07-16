@@ -145,6 +145,31 @@ export async function get3DModelDetails(modelId) {
   }
 }
 
+// 岩石标本查询相关API
+export const rockSampleApi = {
+  // 获取岩石标本列表（带过滤）
+  getRockSamples: async (filters = {}) => {
+    try {
+      const response = await api.get('/rock-samples', { params: filters });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching rock samples:', error);
+      throw error;
+    }
+  },
+
+  // 获取过滤选项
+  getFilterOptions: async () => {
+    try {
+      const response = await api.get('/rock-samples/filters');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+      throw error;
+    }
+  }
+};
+
 // AI Chat API 配置
 const AI_API_BASE_URL = '/api/dify';  // 使用代理URL
 const AI_API_KEY = 'app-0N3NXK5QifxHob782Pm3nadw';
